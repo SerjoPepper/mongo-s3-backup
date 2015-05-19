@@ -1,7 +1,7 @@
 {
   "name": "mongo-s3-backup",
   "description": "Mongo s3 backuper written on node.js",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "bin": {
     "mongo-s3-backup": "./bin/mongo-s3-backup"
   },
@@ -15,7 +15,6 @@
     "bluebird": "^2.9.6",
     "coffee-script": "^1.8.0",
     "moment": "2.1",
-    "mongodb": "~1.2.14",
     "rimraf": "^2.3.4",
     "tar.gz": "^0.1.1",
     "yargs": "^3.7.0"
