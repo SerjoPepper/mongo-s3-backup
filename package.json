@@ -1,0 +1,21 @@
+{
+  "name": "mongo-s3-backup",
+  "description": "Mongo s3 backuper written on node.js",
+  "version": "0.0.1",
+  "bin": {
+    "mongo-s3-backup": "./bin/mongo-s3-backup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/SerjoPepper/mongo-s3-backup.git"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "coffee-script": "^1.8.0",
+    "yargs": "^3.7.0",
+    "bluebird": "^2.9.6",
+    "aws-sdk": "^2.1.16",
+    "mongodb": "~1.2.14",
+    "moment": "2.1"
+  }
+}
