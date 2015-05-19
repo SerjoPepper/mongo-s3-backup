@@ -5,6 +5,8 @@ path = require 'path'
 fs = require 'fs'
 moment = require 'moment'
 cp = require 'child_process'
+rimraf = require 'rimraf'
+targz = require 'tar.gz'
 
 class Backup
 
@@ -18,38 +20,43 @@ class Backup
   ###
   constructor: (@s3Options = {}, @dbOptions = {}) ->
     @s3Client = new aws.S3(@s3Options)
-    @db = new mongo.Db(dbOptions.db, new mongo.Server(dbOptions.host, dbOptions.port, {}), {w: 1})
+    @db = new mongo.Db(@dbOptions.db, new mongo.Server(@dbOptions.host, @dbOptions.port, {}), {w: 1})
     @dbConnect = promise.fromNode (cb) => @db.open(cb)
 
   dump: ([fileName]..., cb) ->
+    date = moment().format('DDMMYY_HHmm')
     @dbConnect
     .then () =>
       promise.try =>
         @dbOptions.collection && [@dbOptions.collection] || promise.fromNode (cb) => @db.collectionNames(cb)
     .each (collection) =>
       promise.try =>
-        defer = promise.defer()
-        args = ['--db', @dbOptions.db, '--collection', collection]
+        dir = __dirname + 'tmp_dump_' + date
+        gzipFile = dir + '.tar.gz'
+        args = ['--db', @dbOptions.db, '--out', dir]
+        if @dbOptions.collection
+          args = args.concat(['--collection', collection.name])
         if @dbOptions.host
           args = args.concat(['--host', @dbOptions.host])
         if @dbOptions.port
           args = args.concat(['--port', @dbOptions.port])
-        args.push '-'
-        mongodump = cp.spawn('mongodump', args)
-        mongodump.output.pause()
-        mongodump.on 'exit', -> defer.resolve(mongodump.output)
-        mongodump.on 'error', (err) -> defer.reject(err)
-        defer.promise
-      .then (stream) =>
-        stream.resume()
-        promise.fromNode (callback) =>
+        promise.fromNode (cb) ->
+          mongodump = cp.exec('mongodump ' + args.join(' '), cb)
+        .then ->
+          promise.fromNode (cb) ->
+            new targz().compress(dir, gzipFile, cb)
+        .then =>
           options =
             Bucket: @s3Options.bucket
-            Key: "mongo_dump/#{moment().format('DDMMYY_HHmm')}/#{@dbOptions.db}/#{collection}.bson"
+            Key: "mongo_dump/#{date}.tar.gz"
             ACL: 'private'
-            Body: stream
+            Body: fs.createReadStream(gzipFile)
             ContentType: 'binary/octet-stream'
           @s3Client.putObject(options, callback)
+        .then ->
+          promise.fromNode (cb) -> rimraf(dir, cb)
+        .then ->
+          promise.fromNode (cb) -> rimraf(gzipFile, cb)
     .nodeify(cb)
 
 
