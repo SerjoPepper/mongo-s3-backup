@@ -9,8 +9,8 @@ targz = require 'tar.gz'
 
 class Backup
 
-  @create: (s3Options, dbOptions) ->
-    new Backup(s3Options, dbOptions)
+  @create: (s3Options, dbOptions, targzOptions) ->
+    new Backup(s3Options, dbOptions, targzOptions)
 
   ###
   @param [Object] options
