@@ -23,7 +23,7 @@ class Backup
   dump: ([fileName]..., cb) ->
     date = moment().format('DDMMYY_HHmm')
     promise.try =>
-      dir = __dirname + 'tmp_dump_' + date
+      dir = path.join(__dirname, 'tmp_dump_' + date)
       gzipFile = dir + '.tar.gz'
       args = ['--db', @dbOptions.db, '--out', dir]
       if @dbOptions.collection
