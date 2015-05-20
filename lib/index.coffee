@@ -17,7 +17,7 @@ class Backup
   @option options [Object] s3 S3 config object
   @option options [Object] mongo S3 config object
   ###
-  constructor: (@s3Options = {}, @dbOptions = {}) ->
+  constructor: (@s3Options = {}, @dbOptions = {}, @targzOptions) ->
     @s3Client = new aws.S3(@s3Options)
 
   dump: ([fileName]..., cb) ->
@@ -34,9 +34,9 @@ class Backup
         args = args.concat(['--port', @dbOptions.port])
       promise.fromNode (cb) ->
         mongodump = cp.exec('mongodump ' + args.join(' '), cb)
-      .then ->
-        promise.fromNode (cb) ->
-          new targz().compress(dir, gzipFile, cb)
+      .then =>
+        promise.fromNode (cb) =>
+          new targz(@targzOptions).compress(dir, gzipFile, cb)
       .then =>
         promise.fromNode (cb) =>
           options =
